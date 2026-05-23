@@ -1,0 +1,10 @@
+# Binaries
+bin/
+vuln-auditor-cli
+
+# Logs
+*.log
+pentest_assistant.log
+
+# OS files
+.DS_Store
