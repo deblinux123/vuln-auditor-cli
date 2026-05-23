@@ -15,10 +15,11 @@ func RunInitialForm() (FormResult, error) {
 			huh.NewSelect[string]().
 				Title("🤖 Select the AI model to use (ollama)").
 				Options(
-					huh.NewOption("Qwen 2.5 Coder (Recommended)", "qwen2.5-coder"),
-					huh.NewOption("Gemma 2", "gemma2"),
+					huh.NewOption("Deepseek Coder (Recommended)", "deepseek-coder:6.7b"),
+					huh.NewOption("Code Gemma", "codegemma:7b"),
+					huh.NewOption("Gemma 4", "gemma4:e4b"),
 					huh.NewOption("Gemma 3", "gemma3:4b"),
-					huh.NewOption("Llama 3", "llama3"),
+					huh.NewOption("Qwen 3.6", "qwen3.6:35b"),
 				).Value(&result.ModelName),
 
 			huh.NewInput().

@@ -13,26 +13,22 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// ساختار استاندارد هر پیام در ساختار چت اولاما
 type Message struct {
-	Role    string `json:"role"` // می تواند system, user یا assistant باشد
+	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-// ساختار درخواست ارسالی به Endpoint چت اولاما
 type OllamaChatRequest struct {
 	Model    string    `json:"model"`
 	Messages []Message `json:"messages"`
 	Stream   bool      `json:"stream"`
 }
 
-// ساختار هر خط پاسخ دریافتی در حالت استریم چت
 type OllamaChatResponse struct {
 	Message Message `json:"message"`
 	Done    bool    `json:"done"`
 }
 
-// تابع اصلی برای مدیریت چت استریم و حفظ تاریخچه
 func ChatWithOllama(model string, conversation []Message) (string, error) {
 	ollamaURL := "http://localhost:11434/api/chat"
 
@@ -84,7 +80,6 @@ func ChatWithOllama(model string, conversation []Message) (string, error) {
 	return fullResponse.String(), nil
 }
 
-// تابع رندر کردن شیک مارک‌داون با Glamour
 func RenderMarkdown(text string) {
 	r, err := glamour.NewTermRenderer(
 		glamour.WithAutoStyle(),
