@@ -17,7 +17,7 @@ func RunInitialForm() (FormResult, error) {
 				Options(
 					huh.NewOption("Qwen 2.5 Coder (Recommended)", "qwen2.5-coder"),
 					huh.NewOption("Gemma 2", "gemma2"),
-					huh.NewOption("Gemma 3", "gemma3"),
+					huh.NewOption("Gemma 3", "gemma3:4b"),
 					huh.NewOption("Llama 3", "llama3"),
 				).Value(&result.ModelName),
 
