@@ -13,68 +13,64 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-type OllamaRequest struct {
-	Model  string `json:"model"`
-	Prompt string `json:"prompt"`
-	System string `json:"system,omitempty"`
-	Stream bool   `json:"stream"`
+// ساختار استاندارد هر پیام در ساختار چت اولاما
+type Message struct {
+	Role    string `json:"role"` // می تواند system, user یا assistant باشد
+	Content string `json:"content"`
 }
 
-type OllamaStreamResponse struct {
-	Response string `json:"response"`
-	Done     bool   `json:"done"`
+// ساختار درخواست ارسالی به Endpoint چت اولاما
+type OllamaChatRequest struct {
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+	Stream   bool      `json:"stream"`
 }
 
-func StreamOllamaResponse(model, systemPrompt, userPrompt string) (string, error) {
-	// This function will handle the streaming response from Ollama.
+// ساختار هر خط پاسخ دریافتی در حالت استریم چت
+type OllamaChatResponse struct {
+	Message Message `json:"message"`
+	Done    bool    `json:"done"`
+}
 
-	ollamaURL := "http://localhost:11434/api/generate"
+// تابع اصلی برای مدیریت چت استریم و حفظ تاریخچه
+func ChatWithOllama(model string, conversation []Message) (string, error) {
+	ollamaURL := "http://localhost:11434/api/chat"
 
-	requestBody, err := json.Marshal(OllamaRequest{
-		Model:  model,
-		System: systemPrompt,
-		Prompt: userPrompt,
-		Stream: true,
+	requestBody, err := json.Marshal(OllamaChatRequest{
+		Model:    model,
+		Messages: conversation,
+		Stream:   true,
 	})
-
 	if err != nil {
-		return "", fmt.Errorf("Failed to marshal request body: %w", err)
+		return "", fmt.Errorf("error marshalling chat request: %w", err)
 	}
 
 	resp, err := http.Post(ollamaURL, "application/json", bytes.NewBuffer(requestBody))
-
 	if err != nil {
-		return "", fmt.Errorf("Failed to connect to Ollama API: %w", err)
+		return "", fmt.Errorf("failed to connect to Ollama: %w", err)
 	}
-
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Ollama API returned non-OK status: %s", resp.Status)
+		return "", fmt.Errorf("ollama returned non-200 status: %d", resp.StatusCode)
 	}
 
 	scanner := bufio.NewScanner(resp.Body)
-
 	var fullResponse strings.Builder
-
-	fmt.Println("AI Response: ")
-	fmt.Println(strings.Repeat("-", 50))
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
-
-		var streamResp OllamaStreamResponse
+		var streamResp OllamaChatResponse
 
 		if err := json.Unmarshal(line, &streamResp); err != nil {
-			log.Errorf("Failed to unmarshal stream response: %v", err)
+			log.Error("Error parsing chat stream line", "error", err)
 			continue
 		}
 
-		fmt.Print(streamResp.Response)
-
+		fmt.Print(streamResp.Message.Content)
 		os.Stdout.Sync()
 
-		fullResponse.WriteString(streamResp.Response)
+		fullResponse.WriteString(streamResp.Message.Content)
 
 		if streamResp.Done {
 			break
@@ -82,33 +78,27 @@ func StreamOllamaResponse(model, systemPrompt, userPrompt string) (string, error
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("Error reading stream response: %w", err)
+		return "", fmt.Errorf("error reading stream data: %w", err)
 	}
-
-	fmt.Println("\n" + strings.Repeat("-", 50))
 
 	return fullResponse.String(), nil
 }
 
-func ReadMarkdown(text string) {
-	// This function can be used to read and display the markdown response in a more user-friendly way.
-
+// تابع رندر کردن شیک مارک‌داون با Glamour
+func RenderMarkdown(text string) {
 	r, err := glamour.NewTermRenderer(
 		glamour.WithAutoStyle(),
 		glamour.WithWordWrap(100),
 	)
-
 	if err != nil {
 		fmt.Println(text)
 		return
 	}
 
 	out, err := r.Render(text)
-
 	if err != nil {
 		fmt.Println(text)
 		return
 	}
-
-	fmt.Println(out)
+	fmt.Print(out)
 }
